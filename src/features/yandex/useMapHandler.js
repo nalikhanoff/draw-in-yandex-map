@@ -1,11 +1,18 @@
 import { v4 as uuid } from "uuid";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { MARKER_TYPE } from "Shared/constants/common";
 
-export function useYandexMap() {
+export default function useMapHandler() {
   const [isContextMenuShown, setIsContextMenuShown] = useState(false);
+  const [isMarkerFormShown, setIsMarkerFormShown] = useState(false);
   const [placemarks, setPlacemarks] = useState([]);
+  const [selectedPlacemarkId, setSelectedPlacemarkId] = useState(null);
   const [lines, setLines] = useState([]);
+
+  const selectedPlacemark = useMemo(() => {
+    if (!selectedPlacemarkId || !placemarks.length) return null;
+    return placemarks.find((p) => p.id === selectedPlacemarkId);
+  }, [selectedPlacemarkId, placemarks]);
 
   const { current: handleMapClick } = useRef((e) => {
     const coords = e.get("coords");
@@ -17,7 +24,7 @@ export function useYandexMap() {
           id: uuid(),
           title: "unknown place",
           description: "unknown place description",
-          markerType: MARKER_TYPE.DEFAULT,
+          markerType: MARKER_TYPE.DEFAULT.VALUE,
           coords,
         },
       ];
@@ -72,14 +79,39 @@ export function useYandexMap() {
     setIsContextMenuShown(false);
   });
 
+  const { current: handleMarkerFormClose } = useRef(() => {
+    setIsMarkerFormShown(false);
+  });
+
+  const { current: handlePlacemarkSelect } = useRef((id) => {
+    setSelectedPlacemarkId(id);
+    setIsMarkerFormShown(true);
+  });
+
+  const { current: handleMarkerFieldChange } = useRef((e) => {
+    const { id, name, value } = e.target;
+
+    setPlacemarks((prevState) => {
+      const newState = [...prevState];
+      const placemarkToChange = newState.find((p) => p.id === id);
+      placemarkToChange[name] = value;
+      return newState;
+    });
+  });
+
   return {
     handleMapClick,
     draw,
     lines,
     placemarks,
     isContextMenuShown,
+    isMarkerFormShown,
+    selectedPlacemark,
     handleObjectSelected,
     handleRoadSelected,
     handleContextMenuClose,
+    handleMarkerFieldChange,
+    handlePlacemarkSelect,
+    handleMarkerFormClose,
   };
 }

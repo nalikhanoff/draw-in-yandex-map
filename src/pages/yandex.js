@@ -9,25 +9,36 @@ import {
 
 import ContextMenu from "Shared/components/ContextMenu";
 
-import { useYandexMap } from "Features/yandex/useYandexMap";
-import { MARKER_TYPE } from "Shared/constants/common";
+import useMapHandler from "Features/yandex/useMapHandler";
+import {
+  MARKER_TYPE,
+  MAP_DEFAULT_CENTER,
+  PLACEMARK_IMAGE_SIZE,
+  POLYLINE_DEFAULT_WIDTH,
+} from "Shared/constants/common";
+import MarkerForm from "Shared/components/MarkerForm";
 
 export default function YandexMaps() {
   const {
-    handleMapClick,
-    isContextMenuShown,
-    placemarks,
     lines,
+    placemarks,
+    selectedPlacemark,
+    isContextMenuShown,
+    isMarkerFormShown,
     draw,
+    handleMapClick,
     handleRoadSelected,
     handleObjectSelected,
     handleContextMenuClose,
-  } = useYandexMap();
+    handlePlacemarkSelect,
+    handleMarkerFieldChange,
+    handleMarkerFormClose,
+  } = useMapHandler();
   return (
     <YMaps>
       <Map
         defaultState={{
-          center: [51.08, 71.26],
+          center: MAP_DEFAULT_CENTER,
           zoom: 9,
         }}
         width="100%"
@@ -47,16 +58,19 @@ export default function YandexMaps() {
                 key={p.id}
                 geometry={p.coords}
                 options={{
-                  iconLayout: "default#image",
-                  iconImageSize: [30, 30],
-                  ...(p.markerType !== MARKER_TYPE.DEFAULT && {
-                    iconImageHref:
-                      "https://img.icons8.com/ios-filled/2x/marker-h.png",
-                  }),
+                  iconImageSize: PLACEMARK_IMAGE_SIZE,
+                  ...(p.markerType !== MARKER_TYPE.DEFAULT.VALUE
+                    ? {
+                        iconLayout: "default#image",
+                        iconImageHref:
+                          "https://img.icons8.com/ios-filled/2x/marker-i.png",
+                      }
+                    : { preset: "islands#blueCircleDotIcon" }),
                 }}
                 properties={{
                   hintContent: `<b>${p.title}</b><br /> <span>${p.description}</span>`,
                 }}
+                onClick={() => handlePlacemarkSelect(p.id)}
               />
             );
           })}
@@ -67,7 +81,7 @@ export default function YandexMaps() {
               key={line.id}
               geometry={line.coords}
               options={{
-                strokeWidth: 10,
+                strokeWidth: POLYLINE_DEFAULT_WIDTH,
                 strokeColor: line.color,
                 editorMaxPoints: Infinity,
               }}
@@ -85,6 +99,15 @@ export default function YandexMaps() {
         onClose={handleContextMenuClose}
         onObjectSelected={handleObjectSelected}
         onRoadSelected={handleRoadSelected}
+      />
+      <MarkerForm
+        isShown={isMarkerFormShown}
+        title={selectedPlacemark?.title}
+        description={selectedPlacemark?.description}
+        markerType={selectedPlacemark?.markerType}
+        onClose={handleMarkerFormClose}
+        onTextFieldChange={handleMarkerFieldChange}
+        id={selectedPlacemark?.id}
       />
     </YMaps>
   );

@@ -4,10 +4,10 @@ import {
   ZoomControl,
   Clusterer,
   Placemark,
+  Polyline,
 } from "@pbe/react-yandex-maps";
 
 import ContextMenu from "Shared/components/ContextMenu";
-import OffCanvas from "Shared/components/OffCanvas";
 
 import { useYandexMap } from "Features/yandex/useYandexMap";
 import { MARKER_TYPE } from "Shared/constants/common";
@@ -17,7 +17,11 @@ export default function YandexMaps() {
     handleMapClick,
     isContextMenuShown,
     placemarks,
+    lines,
+    draw,
+    handleRoadSelected,
     handleObjectSelected,
+    handleContextMenuClose,
   } = useYandexMap();
   return (
     <YMaps>
@@ -37,8 +41,7 @@ export default function YandexMaps() {
             groupByCoordinates: false,
           }}
         >
-          {placemarks.map((p, idx) => {
-            console.log(p);
+          {placemarks.map((p) => {
             return (
               <Placemark
                 key={p.id}
@@ -52,20 +55,37 @@ export default function YandexMaps() {
                   }),
                 }}
                 properties={{
-                  iconContent: idx + 1,
                   hintContent: `<b>${p.title}</b><br /> <span>${p.description}</span>`,
                 }}
               />
             );
           })}
         </Clusterer>
+        {lines.map((line) => {
+          return (
+            <Polyline
+              key={line.id}
+              geometry={line.coords}
+              options={{
+                strokeWidth: 10,
+                strokeColor: line.color,
+                editorMaxPoints: Infinity,
+              }}
+              onClick={(e) => draw(e, line.id)}
+              properties={{
+                hintContent: `<b>${line.title}</b><br /> <span>${line.description}</span>`,
+              }}
+            />
+          );
+        })}
         <ZoomControl options={{ float: "right" }} />
       </Map>
-      <OffCanvas isShown={isContextMenuShown}>
-        <ContextMenu
-          onObjectSelected={handleObjectSelected}
-        />
-      </OffCanvas>
+      <ContextMenu
+        isShown={isContextMenuShown}
+        onClose={handleContextMenuClose}
+        onObjectSelected={handleObjectSelected}
+        onRoadSelected={handleRoadSelected}
+      />
     </YMaps>
   );
 }

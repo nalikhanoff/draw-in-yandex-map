@@ -1,10 +1,10 @@
 import { v4 as uuid } from "uuid";
-import { useState, useRef, useMemo } from "react";
-import { MARKER_TYPE } from "Shared/constants/common";
+import { useState, useRef, useMemo, useCallback } from "react";
+import { MARKER_TYPE, OFFCANVAS_MODE } from "Shared/constants/common";
 
 export default function useMapHandler() {
-  const [isContextMenuShown, setIsContextMenuShown] = useState(false);
-  const [isMarkerFormShown, setIsMarkerFormShown] = useState(false);
+  const [isOffCanvasShown, setOffCanvasShown] = useState(false);
+  const [offCanvasMode, setOffCanvasMode] = useState(null);
   const [placemarks, setPlacemarks] = useState([]);
   const [selectedPlacemarkId, setSelectedPlacemarkId] = useState(null);
   const [lines, setLines] = useState([]);
@@ -22,15 +22,17 @@ export default function useMapHandler() {
         ...prevState,
         {
           id: uuid(),
-          title: "unknown place",
-          description: "unknown place description",
+          title: "Устройство без названия",
+          description: "Описание устройства без названия",
           markerType: MARKER_TYPE.DEFAULT.VALUE,
           coords,
         },
       ];
     });
 
-    setIsContextMenuShown(true);
+    setOffCanvasShown(true);
+    setOffCanvasMode(OFFCANVAS_MODE.CONTEXT_MENU);
+    
   });
 
   const { current: draw } = useRef(({ originalEvent: { target } }, id) => {
@@ -48,7 +50,8 @@ export default function useMapHandler() {
   });
 
   const { current: handleObjectSelected } = useRef(() => {
-    setIsContextMenuShown(false);
+    setOffCanvasShown(false);
+    setOffCanvasMode(null);
   });
 
   const { current: handleRoadSelected } = useRef(() => {
@@ -63,29 +66,30 @@ export default function useMapHandler() {
         ...prevState,
         {
           id: uuid(),
-          title: "unknown road",
-          description: "unknown road description",
+          title: "Линия без названия",
+          description: "Описание линии без названия",
           coords: [coords, coords.map((c) => c + 0.1)],
           color: "#F008",
         },
       ];
     });
 
-    setIsContextMenuShown(false);
+    setOffCanvasShown(false);
+    setOffCanvasMode(null);
   });
 
-  const { current: handleContextMenuClose } = useRef(() => {
-    setPlacemarks((prevValue) => prevValue.slice(0, -1));
-    setIsContextMenuShown(false);
-  });
-
-  const { current: handleMarkerFormClose } = useRef(() => {
-    setIsMarkerFormShown(false);
-  });
+  const handleOffCanvasClose = useCallback(() => {
+    if (offCanvasMode === OFFCANVAS_MODE.CONTEXT_MENU) {
+      setPlacemarks((prevValue) => prevValue.slice(0, -1));
+    }
+    setOffCanvasShown(false);
+    setOffCanvasMode(null);
+  }, [offCanvasMode]);
 
   const { current: handlePlacemarkSelect } = useRef((id) => {
     setSelectedPlacemarkId(id);
-    setIsMarkerFormShown(true);
+    setOffCanvasShown(true);
+    setOffCanvasMode(OFFCANVAS_MODE.MARKER_FORM);
   });
 
   const { current: handleMarkerFieldChange } = useRef((e) => {
@@ -104,14 +108,13 @@ export default function useMapHandler() {
     draw,
     lines,
     placemarks,
-    isContextMenuShown,
-    isMarkerFormShown,
+    isOffCanvasShown,
+    offCanvasMode,
     selectedPlacemark,
     handleObjectSelected,
     handleRoadSelected,
-    handleContextMenuClose,
+    handleOffCanvasClose,
     handleMarkerFieldChange,
     handlePlacemarkSelect,
-    handleMarkerFormClose,
   };
 }

@@ -7,7 +7,9 @@ import {
   Polyline,
 } from "@pbe/react-yandex-maps";
 
+import OffCanvas from "Shared/components/OffCanvas";
 import ContextMenu from "Shared/components/ContextMenu";
+import MarkerForm from "Shared/components/MarkerForm";
 
 import useMapHandler from "Features/yandex/useMapHandler";
 import {
@@ -15,25 +17,27 @@ import {
   MAP_DEFAULT_CENTER,
   PLACEMARK_IMAGE_SIZE,
   POLYLINE_DEFAULT_WIDTH,
+  OFFCANVAS_MODE,
 } from "Shared/constants/common";
-import MarkerForm from "Shared/components/MarkerForm";
+
+import network from '../../public/network.png';
 
 export default function YandexMaps() {
   const {
     lines,
     placemarks,
     selectedPlacemark,
-    isContextMenuShown,
-    isMarkerFormShown,
+    isOffCanvasShown,
+    offCanvasMode,
     draw,
     handleMapClick,
     handleRoadSelected,
     handleObjectSelected,
-    handleContextMenuClose,
+    handleOffCanvasClose,
     handlePlacemarkSelect,
     handleMarkerFieldChange,
-    handleMarkerFormClose,
   } = useMapHandler();
+  console.log(network);
   return (
     <YMaps>
       <Map
@@ -62,8 +66,7 @@ export default function YandexMaps() {
                   ...(p.markerType !== MARKER_TYPE.DEFAULT.VALUE
                     ? {
                         iconLayout: "default#image",
-                        iconImageHref:
-                          "https://img.icons8.com/ios-filled/2x/marker-i.png",
+                        iconImageHref: network.src,
                       }
                     : { preset: "islands#blueCircleDotIcon" }),
                 }}
@@ -94,21 +97,23 @@ export default function YandexMaps() {
         })}
         <ZoomControl options={{ float: "right" }} />
       </Map>
-      <ContextMenu
-        isShown={isContextMenuShown}
-        onClose={handleContextMenuClose}
-        onObjectSelected={handleObjectSelected}
-        onRoadSelected={handleRoadSelected}
-      />
-      <MarkerForm
-        isShown={isMarkerFormShown}
-        title={selectedPlacemark?.title}
-        description={selectedPlacemark?.description}
-        markerType={selectedPlacemark?.markerType}
-        onClose={handleMarkerFormClose}
-        onTextFieldChange={handleMarkerFieldChange}
-        id={selectedPlacemark?.id}
-      />
+      <OffCanvas isShown={isOffCanvasShown} onClose={handleOffCanvasClose}>
+        {offCanvasMode === OFFCANVAS_MODE.CONTEXT_MENU && (
+          <ContextMenu
+            onObjectSelected={handleObjectSelected}
+            onRoadSelected={handleRoadSelected}
+          />
+        )}
+        {offCanvasMode === OFFCANVAS_MODE.MARKER_FORM && (
+          <MarkerForm
+            description={selectedPlacemark?.description}
+            markerType={selectedPlacemark?.markerType}
+            title={selectedPlacemark?.title}
+            onTextFieldChange={handleMarkerFieldChange}
+            id={selectedPlacemark?.id}
+          />
+        )}
+      </OffCanvas>
     </YMaps>
   );
 }

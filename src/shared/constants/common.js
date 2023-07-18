@@ -66,6 +66,6 @@ export const MAP_DEFAULT_CENTER = [51.123164, 71.432849];
 export const PLACEMARK_IMAGE_SIZE = [30, 30];
 export const POLYLINE_DEFAULT_WIDTH = 5;
 
-export const GET_OBJECT_COLLECTION = Object.values(GEO_OBJECT);
+export const GEO_OBJECT_COLLECTION = Object.values(GEO_OBJECT);
 export const MARKER_TYPE_COLLECTION = Object.values(MARKER_TYPE);
 export const LINE_COLOR_COLLECTION = Object.values(LINE_COLOR);

@@ -6,6 +6,8 @@ import {
   Placemark,
   Polyline,
   Polygon,
+  ListBox,
+  ListBoxItem,
 } from "@pbe/react-yandex-maps";
 
 import { Container, Button, Row, Col } from "react-bootstrap";
@@ -22,6 +24,8 @@ import {
   PLACEMARK_IMAGE_SIZE,
   POLYLINE_DEFAULT_WIDTH,
   OFFCANVAS_MODE,
+  GEO_OBJECT_COLLECTION,
+  GEO_OBJECT,
 } from "Shared/constants/common";
 
 export default function YandexMaps() {
@@ -70,6 +74,24 @@ export default function YandexMaps() {
         modules={["geoObject.addon.editor", "geoObject.addon.hint"]}
         onClick={handleMapClick}
       >
+        <ListBox data={{ content: "Создать" }}>
+          {GEO_OBJECT_COLLECTION.map((geoObj) => {
+            return (
+              <ListBoxItem
+                key={geoObj.VALUE}
+                data={{ content: geoObj.LABEL }}
+                options={{
+                  selectOnClick: false,
+                }}
+                onClick={(e) =>
+                  console.log(
+                    e.originalEvent.target.options.getParent().unset()
+                  )
+                }
+              />
+            );
+          })}
+        </ListBox>
         <Clusterer
           options={{
             preset: "islands#invertedVioletClusterIcons",
@@ -90,6 +112,11 @@ export default function YandexMaps() {
                   hintContent: `<b>${p.title}</b><br /> <span>${p.description}</span>`,
                 }}
                 onClick={() => handlePlacemarkSelect(p.id)}
+                instanceRef={(ref) =>
+                  ref &&
+                  !p.coords.length &&
+                  handleStartDraw(ref, p.id, GEO_OBJECT.PLACEMARK)
+                }
               />
             );
           })}

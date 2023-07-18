@@ -15,7 +15,7 @@ export default function App({ Component, pageProps }) {
       <Navbar expand="lg" className="bg-body-tertiary">
         <Container>
           <Navbar.Brand as={Link} href="/">
-            FTD
+            Brand
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">

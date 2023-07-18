@@ -1,17 +1,19 @@
 import Form from "react-bootstrap/Form";
-import { MARKER_TYPE_COLLECTION } from "Shared/constants/common";
+import Button from "react-bootstrap/Button";
+import { LINE_COLOR_COLLECTION } from "Shared/constants/common";
 
-export default function MarkerForm({
+export default function LineForm({
   id,
   title,
   description,
-  markerType,
+  color,
   onTextFieldChange,
+  onStartDraw,
 }) {
   return (
     <Form>
       <Form.Group className="mb-3">
-        <Form.Label>Название устройства</Form.Label>
+        <Form.Label>Название линии</Form.Label>
         <Form.Control
           onChange={onTextFieldChange}
           placeholder="Название устройства"
@@ -21,7 +23,7 @@ export default function MarkerForm({
         />
       </Form.Group>
       <Form.Group className="mb-3">
-        <Form.Label>Описание устройства</Form.Label>
+        <Form.Label>Описание линии</Form.Label>
         <Form.Control
           onChange={onTextFieldChange}
           as="textarea"
@@ -33,13 +35,13 @@ export default function MarkerForm({
       </Form.Group>
       <Form.Select
         onChange={onTextFieldChange}
-        name="markerType"
-        value={markerType}
-        placeholder="Тип"
+        name="color"
+        value={color}
+        placeholder="Цвет линии"
         id={id}
       >
-        <option disabled>Выберите тип</option>
-        {MARKER_TYPE_COLLECTION.map((type) => {
+        <option disabled>Выберите цвет линии</option>
+        {LINE_COLOR_COLLECTION.map((type) => {
           return (
             <option value={type.VALUE} key={type.VALUE}>
               {type.LABEL}
@@ -47,6 +49,9 @@ export default function MarkerForm({
           );
         })}
       </Form.Select>
+      <Button className="mt-3" onClick={onStartDraw}>
+        Редактировать линию
+      </Button>
     </Form>
   );
 }

@@ -1,23 +1,25 @@
 import React from "react";
 
-export default function useContextMenu() {
+export default function useContextMenu({ onMenuItemClicked }) {
   const [isContextShown, setContextShown] = React.useState(false);
   const [xYPosistion, setXyPosistion] = React.useState({ x: 0, y: 0 });
-  const handleContextMenu = (event) => {
+  const [coords, setCoords] = React.useState([]);
+  const handleContextMenu = ({ position, coords }) => {
     setContextShown(false);
-    const positionChange = {
-      x: event.pageX,
-      y: event.pageY,
-    };
-    setXyPosistion(positionChange);
+    setCoords(coords);
+    setXyPosistion({
+      x: position[0],
+      y: position[1],
+    });
     setContextShown(true);
   };
   const handleHideContextMenu = (_) => {
     setContextShown(false);
+    setCoords([]);
   };
-  const onMenuItemClicked = (e) => {
+  const handleMenuItemClick = (e) => {
     const { value } = e.currentTarget.dataset;
-    console.log(value, 'I am the value of menu item')
+    onMenuItemClicked(value, coords);
     handleHideContextMenu();
   };
 
@@ -26,6 +28,6 @@ export default function useContextMenu() {
     xYPosistion,
     handleContextMenu,
     handleHideContextMenu,
-    onMenuItemClicked,
+    handleMenuItemClick,
   };
 }

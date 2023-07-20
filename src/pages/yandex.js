@@ -6,16 +6,11 @@ import {
   Placemark,
   Polyline,
   Polygon,
-  ListBox,
-  ListBoxItem,
 } from "@pbe/react-yandex-maps";
 
 import { Container, Button, Row, Col } from "react-bootstrap";
 
 import OffCanvas from "Shared/components/OffCanvas";
-import ContextMenu from "Shared/components/ContextMenu";
-import MarkerForm from "Shared/components/MarkerForm";
-import LineForm from "Shared/components/LineForm";
 import RightContext from "Shared/components/RightContext";
 
 import useMapHandler from "Features/yandex/useMapHandler";
@@ -24,30 +19,23 @@ import {
   MAP_DEFAULT_CENTER,
   PLACEMARK_IMAGE_SIZE,
   POLYLINE_DEFAULT_WIDTH,
-  OFFCANVAS_MODE,
-  GEO_OBJECT_COLLECTION,
-  GEO_OBJECT,
+  MAP_ELEMENT,
 } from "Shared/constants/common";
 import useContextMenu from "Features/yandex/useContextMenu";
+import ElementForm from "Shared/components/ElementForm";
 
 export default function YandexMaps() {
   const {
     lines,
     polygons,
     placemarks,
-    selectedLine,
-    selectedPlacemark,
+    selectedElementValue,
     isOffCanvasShown,
     isDrawing,
-    offCanvasMode,
-    handleLineSelect,
-    handleMapClick,
-    handleObjectSelected,
+    handleMapElementCreation,
+    handleMapElementSelect,
     handleOffCanvasClose,
-    handlePlacemarkSelect,
-    handleMarkerFieldChange,
-    handleLineFieldChange,
-    handleStartDrawPolygon,
+    handleTextFieldChange,
     handleStartDraw,
     handleStopDraw,
   } = useMapHandler();
@@ -57,15 +45,15 @@ export default function YandexMaps() {
     xYPosistion,
     handleContextMenu,
     handleHideContextMenu,
-    onMenuItemClicked,
-  } = useContextMenu();
+    handleMenuItemClick,
+  } = useContextMenu({ onMenuItemClicked: handleMapElementCreation });
 
   return (
     <RightContext
       isContextShown={isContextShown}
       xYPosistion={xYPosistion}
       onHideContextMenu={handleHideContextMenu}
-      onMenuItemClicked={onMenuItemClicked}
+      onMenuItemClicked={handleMenuItemClick}
     >
       <YMaps>
         {isDrawing && (
@@ -90,28 +78,11 @@ export default function YandexMaps() {
           modules={["geoObject.addon.editor", "geoObject.addon.hint"]}
           onClick={handleHideContextMenu}
           onContextmenu={(event) => {
-            const position = event.get('position');
-            handleContextMenu({ pageX: position[0], pageY: position[1] });
+            const position = event.get("position");
+            const coords = event.get("coords");
+            handleContextMenu({ position, coords });
           }}
         >
-          <ListBox data={{ content: "Создать" }}>
-            {GEO_OBJECT_COLLECTION.map((geoObj) => {
-              return (
-                <ListBoxItem
-                  key={geoObj.VALUE}
-                  data={{ content: geoObj.LABEL }}
-                  options={{
-                    selectOnClick: false,
-                  }}
-                  onClick={(e) =>
-                    console.log(
-                      e.originalEvent.target.options.getParent().unset()
-                    )
-                  }
-                />
-              );
-            })}
-          </ListBox>
           <Clusterer
             options={{
               preset: "islands#invertedVioletClusterIcons",
@@ -131,11 +102,8 @@ export default function YandexMaps() {
                   properties={{
                     hintContent: `<b>${p.title}</b><br /> <span>${p.description}</span>`,
                   }}
-                  onClick={() => handlePlacemarkSelect(p.id)}
-                  instanceRef={(ref) =>
-                    ref &&
-                    !p.coords.length &&
-                    handleStartDraw(ref, p.id, GEO_OBJECT.PLACEMARK)
+                  onClick={(e) =>
+                    handleMapElementSelect(e, p.id, MAP_ELEMENT.PLACEMARK.VALUE)
                   }
                 />
               );
@@ -151,11 +119,12 @@ export default function YandexMaps() {
                   strokeColor: line.color,
                   editorMaxPoints: Infinity,
                 }}
-                onClick={(e) => handleLineSelect(e, line.id)}
+                onClick={(e) =>
+                  handleMapElementSelect(e, line.id, MAP_ELEMENT.POLYLINE.VALUE)
+                }
                 properties={{
                   hintContent: `<b>${line.title}</b><br /> <span>${line.description}</span>`,
                 }}
-                // instanceRef={(ref) => ref && !line.coords.length && handleStartDraw(ref, line.id)}
               />
             );
           })}
@@ -169,7 +138,13 @@ export default function YandexMaps() {
                   strokeColor: polygon.color,
                   editorMaxPoints: Infinity,
                 }}
-                onClick={(e) => handleStartDrawPolygon(e, polygon.id)}
+                onClick={(e) =>
+                  handleMapElementSelect(
+                    e,
+                    polygon.id,
+                    MAP_ELEMENT.POLYGON.VALUE
+                  )
+                }
                 properties={{
                   hintContent: `<b>${polygon.title}</b><br /> <span>${polygon.description}</span>`,
                 }}
@@ -179,26 +154,16 @@ export default function YandexMaps() {
           <ZoomControl options={{ float: "right" }} />
         </Map>
         <OffCanvas isShown={isOffCanvasShown} onClose={handleOffCanvasClose}>
-          {offCanvasMode === OFFCANVAS_MODE.CONTEXT_MENU && (
-            <ContextMenu onObjectSelected={handleObjectSelected} />
-          )}
-          {offCanvasMode === OFFCANVAS_MODE.MARKER_FORM && (
-            <MarkerForm
-              description={selectedPlacemark?.description}
-              markerType={selectedPlacemark?.markerType}
-              title={selectedPlacemark?.title}
-              onTextFieldChange={handleMarkerFieldChange}
-              id={selectedPlacemark?.id}
-            />
-          )}
-          {offCanvasMode === OFFCANVAS_MODE.LINE_FORM && (
-            <LineForm
-              description={selectedLine?.description}
-              color={selectedLine?.color}
-              title={selectedLine?.title}
-              onTextFieldChange={handleLineFieldChange}
-              id={selectedLine?.id}
+          {!!selectedElementValue.elementType && !!selectedElementValue.element && (
+            <ElementForm
+              description={selectedElementValue.element?.description}
+              color={selectedElementValue.element?.color}
+              title={selectedElementValue.element?.title}
+              markerType={selectedElementValue.element?.markerType}
+              onTextFieldChange={handleTextFieldChange}
+              id={selectedElementValue.element?.id}
               onStartDraw={handleStartDraw}
+              elementType={selectedElementValue.elementType}
             />
           )}
         </OffCanvas>

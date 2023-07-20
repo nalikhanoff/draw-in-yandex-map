@@ -1,11 +1,6 @@
 import { v4 as uuid } from "uuid";
 import { useState, useRef, useMemo, useCallback } from "react";
-import {
-  MARKER_TYPE,
-  OFFCANVAS_MODE,
-  LINE_COLOR,
-  GEO_OBJECT,
-} from "Shared/constants/common";
+import { MARKER_TYPE, LINE_COLOR, MAP_ELEMENT } from "Shared/constants/common";
 
 export default function useMapHandler() {
   const [isOffCanvasShown, setOffCanvasShown] = useState(false);
@@ -13,84 +8,51 @@ export default function useMapHandler() {
   const [placemarks, setPlacemarks] = useState([]);
   const [lines, setLines] = useState([]);
   const [polygons, setPolygons] = useState([]);
-  const [selectedPlacemarkId, setSelectedPlacemarkId] = useState(null);
-  const [selectedLineId, setSelectedLineId] = useState(null);
-  const [targetLineEvent, setTargetLineEvent] = useState();
-
-  const selectedPlacemark = useMemo(() => {
-    if (!selectedPlacemarkId || !placemarks.length) return null;
-    return placemarks.find((p) => p.id === selectedPlacemarkId);
-  }, [selectedPlacemarkId, placemarks]);
-
-  const selectedLine = useMemo(() => {
-    if (!selectedLineId || !lines.length) return null;
-    return lines.find((p) => p.id === selectedLineId);
-  }, [selectedLineId, lines]);
-
-  const { current: handleMapClick } = useRef((e) => {
-    const coords = e.get("coords");
-
-    setPlacemarks((prevState) => {
-      return [
-        ...prevState,
-        {
-          id: uuid(),
-          title: "Устройство без названия",
-          description: "Описание устройства без названия",
-          markerType: MARKER_TYPE.DEFAULT.VALUE,
-          coords,
-        },
-      ];
-    });
-
-    setOffCanvasShown(true);
-    setOffCanvasMode(OFFCANVAS_MODE.CONTEXT_MENU);
+  const [selectedElement, setSelectedElement] = useState({
+    id: null,
+    elementType: null,
   });
+  const [targetEvent, setTargetEvent] = useState();
 
-  const { current: handleLineSelect } = useRef(
-    ({ originalEvent: { target } }, id) => {
-      setTargetLineEvent(target);
-
-      setSelectedLineId(id);
-      setOffCanvasShown(true);
-      setOffCanvasMode(OFFCANVAS_MODE.LINE_FORM);
+  const selectedElementValue = useMemo(() => {
+    if (!selectedElement.id || !selectedElement.elementType) {
+      return { element: null, elementType: null };
     }
-  );
 
-  const handleStartDraw = useCallback(() => {
-    if (!targetLineEvent) return;
+    if (selectedElement.elementType === MAP_ELEMENT.PLACEMARK.VALUE) {
+      return {
+        element: placemarks.find((p) => p.id === selectedElement.id),
+        elementType: selectedElement.elementType,
+      };
+    } else if (selectedElement.elementType === MAP_ELEMENT.POLYLINE.VALUE) {
+      return {
+        element: lines.find((l) => l.id === selectedElement.id),
+        elementType: selectedElement.elementType,
+      };
+    } else if (selectedElement.elementType === MAP_ELEMENT.POLYGON.VALUE) {
+      return {
+        element: polygons.find((p) => p.id === selectedElement.id),
+        elementType: selectedElement.elementType,
+      };
+    }
+  }, [selectedElement, placemarks, lines, polygons]);
 
-    setOffCanvasShown(false);
-    setOffCanvasMode(null);
-    targetLineEvent.editor.startEditing();
-    targetLineEvent.editor.events.add(["vertexadd", "vertexdragend"], (ev) => {
-      setLines((prevState) => {
-        const newState = [...prevState];
-        const el = newState.find((line) => line.id === selectedLineId);
-        el.coords = ev.originalEvent.target.geometry.getCoordinates();
-        return newState;
-      });
-    });
-  }, [targetLineEvent, selectedLineId]);
-
-  const handleStopDraw = useCallback(() => {
-    if (!targetLineEvent) return;
-    targetLineEvent.editor.stopEditing();
-
-    setTargetLineEvent(null);
-  }, [targetLineEvent]);
-
-  const { current: handleObjectSelected } = useRef((e) => {
-    const { value } = e.currentTarget.dataset;
-
-    if (value !== GEO_OBJECT.PLACEMARK.VALUE) {
-      let coords;
-      setPlacemarks((prevValue) => {
-        coords = prevValue.at(-1).coords;
-        return prevValue.slice(0, -1);
-      });
-
-      if (value === GEO_OBJECT.POLYLINE.VALUE) {
+  const { current: handleMapElementCreation } = useRef(
+    (elementType, coords) => {
+      if (elementType === MAP_ELEMENT.PLACEMARK.VALUE) {
+        setPlacemarks((prevState) => {
+          return [
+            ...prevState,
+            {
+              id: uuid(),
+              title: "Устройство без названия",
+              description: "Описание устройства без названия",
+              markerType: MARKER_TYPE.DEFAULT.VALUE,
+              coords,
+            },
+          ];
+        });
+      } else if (elementType === MAP_ELEMENT.POLYLINE.VALUE) {
         setLines((prevState) => {
           return [
             ...prevState,
@@ -103,8 +65,7 @@ export default function useMapHandler() {
             },
           ];
         });
-
-      } else if (value === GEO_OBJECT.POLYGON.VALUE) {
+      } else if (elementType === MAP_ELEMENT.POLYGON.VALUE) {
         setPolygons((prevState) => {
           return [
             ...prevState,
@@ -119,83 +80,96 @@ export default function useMapHandler() {
         });
       }
     }
-    setOffCanvasShown(false);
-    setOffCanvasMode(null);
-  });
+  );
 
-  const handleOffCanvasClose = useCallback(() => {
-    if (offCanvasMode === OFFCANVAS_MODE.CONTEXT_MENU) {
-      setPlacemarks((prevValue) => prevValue.slice(0, -1));
+  const { current: handleMapElementSelect } = useRef((e, id, elementType) => {
+    setSelectedElement({ id, elementType });
+
+    if (elementType !== MAP_ELEMENT.PLACEMARK.VALUE) {
+      const { target } = e.originalEvent;
+      setTargetEvent(target);
     }
-    setOffCanvasShown(false);
-    setOffCanvasMode(null);
-    setTargetLineEvent(null);
-  }, [offCanvasMode]);
-
-  const { current: handlePlacemarkSelect } = useRef((id) => {
-    setSelectedPlacemarkId(id);
     setOffCanvasShown(true);
-    setOffCanvasMode(OFFCANVAS_MODE.MARKER_FORM);
   });
 
-  const handleStartDrawPolygon = useCallback((e, id) => {
+  const handleStartDraw = useCallback(() => {
+    if (!targetEvent) return;
+
     setOffCanvasShown(false);
     setOffCanvasMode(null);
-    e.originalEvent.target.editor.startEditing();
-    e.originalEvent.target.editor.events.add(
-      ["vertexadd", "vertexdragend"],
-      (ev) => {
-        setPolygons((prevState) => {
+    targetEvent.editor.startEditing();
+    targetEvent.editor.events.add(["vertexadd", "vertexdragend"], (ev) => {
+      if (selectedElement.elementType === MAP_ELEMENT.POLYLINE.VALUE) {
+        setLines((prevState) => {
           const newState = [...prevState];
-          const el = newState.find((line) => line.id === id);
+          const el = newState.find((line) => line.id === selectedElement.id);
           el.coords = ev.originalEvent.target.geometry.getCoordinates();
           return newState;
         });
-        e.originalEvent.target.editor.stopEditing();
+      } else if (selectedElement.elementType === MAP_ELEMENT.POLYGON.VALUE) {
+        setPolygons((prevState) => {
+          const newState = [...prevState];
+          const el = newState.find((line) => line.id === selectedElement.id);
+          el.coords = ev.originalEvent.target.geometry.getCoordinates();
+          return newState;
+        });
       }
-    );
-  }, []);
-
-  const { current: handleMarkerFieldChange } = useRef((e) => {
-    const { id, name, value } = e.target;
-
-    setPlacemarks((prevState) => {
-      const newState = [...prevState];
-      const placemarkToChange = newState.find((p) => p.id === id);
-      placemarkToChange[name] = value;
-      return newState;
     });
-  });
+  }, [targetEvent, selectedElement]);
 
-  const { current: handleLineFieldChange } = useRef((e) => {
+  const handleStopDraw = useCallback(() => {
+    if (!targetEvent) return;
+    targetEvent.editor.stopEditing();
+
+    setTargetEvent(null);
+  }, [targetEvent]);
+
+  const handleOffCanvasClose = useCallback(() => {
+    setOffCanvasShown(false);
+    setOffCanvasMode(null);
+    setTargetEvent(null);
+  }, [offCanvasMode]);
+
+  const { current: handleTextFieldChange } = useRef((e) => {
     const { id, name, value } = e.target;
+    const { elementType } = e.currentTarget.dataset;
 
-    setLines((prevState) => {
-      const newState = [...prevState];
-      const lineToChange = newState.find((p) => p.id === id);
-      lineToChange[name] = value;
-      return newState;
-    });
+    if (elementType === MAP_ELEMENT.PLACEMARK.VALUE) {
+      setPlacemarks((prevState) => {
+        const newState = [...prevState];
+        const placemarkToChange = newState.find((p) => p.id === id);
+        placemarkToChange[name] = value;
+        return newState;
+      });
+    } else if (elementType === MAP_ELEMENT.POLYLINE.VALUE) {
+      setLines((prevState) => {
+        const newState = [...prevState];
+        const lineToChange = newState.find((p) => p.id === id);
+        lineToChange[name] = value;
+        return newState;
+      });
+    } else if (elementType === MAP_ELEMENT.POLYGON.VALUE) {
+      setPolygons((prevState) => {
+        const newState = [...prevState];
+        const lineToChange = newState.find((p) => p.id === id);
+        lineToChange[name] = value;
+        return newState;
+      });
+    }
   });
 
   return {
-    handleMapClick,
     lines,
     placemarks,
     polygons,
+    isDrawing: !!targetEvent,
     isOffCanvasShown,
-    offCanvasMode,
-    selectedLine,
-    selectedPlacemark,
-    handleObjectSelected,
+    selectedElementValue,
+    handleMapElementCreation,
+    handleMapElementSelect,
     handleOffCanvasClose,
-    handleMarkerFieldChange,
-    handlePlacemarkSelect,
-    handleLineSelect,
-    handleLineFieldChange,
-    isDrawing: !!targetLineEvent,
+    handleTextFieldChange,
     handleStartDraw,
     handleStopDraw,
-    handleStartDrawPolygon,
   };
 }

@@ -1,4 +1,4 @@
-export const GEO_OBJECT = {
+export const MAP_ELEMENT = {
   PLACEMARK: {
     LABEL: "Устройство",
     VALUE: "PLACEMARK",
@@ -56,16 +56,10 @@ export const LINE_COLOR = {
   },
 };
 
-export const OFFCANVAS_MODE = {
-  CONTEXT_MENU: "CONTEXT_MENU",
-  MARKER_FORM: "MARKER_FORM",
-  LINE_FORM: "LINE_FORM",
-};
-
 export const MAP_DEFAULT_CENTER = [51.123164, 71.432849];
 export const PLACEMARK_IMAGE_SIZE = [30, 30];
 export const POLYLINE_DEFAULT_WIDTH = 5;
 
-export const GEO_OBJECT_COLLECTION = Object.values(GEO_OBJECT);
+export const MAP_ELEMENT_COLLECTION = Object.values(MAP_ELEMENT);
 export const MARKER_TYPE_COLLECTION = Object.values(MARKER_TYPE);
 export const LINE_COLOR_COLLECTION = Object.values(LINE_COLOR);

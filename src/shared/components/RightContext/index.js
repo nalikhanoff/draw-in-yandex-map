@@ -1,7 +1,7 @@
 import React from "react";
 import ListGroup from "react-bootstrap/ListGroup";
 
-import { GEO_OBJECT_COLLECTION } from "Shared/constants/common";
+import { MAP_ELEMENT_COLLECTION } from "Shared/constants/common";
 
 function RightContext({
   onMenuItemClicked,
@@ -17,7 +17,7 @@ function RightContext({
           style={{ top: xYPosistion.y, left: xYPosistion.x }}
           className="rightClick"
         >
-          {GEO_OBJECT_COLLECTION.map((geoObj) => {
+          {MAP_ELEMENT_COLLECTION.map((geoObj) => {
             return (
               <ListGroup.Item
                 action

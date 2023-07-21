@@ -31,7 +31,6 @@ export default function YandexMaps() {
     placemarks,
     selectedElementValue,
     isOffCanvasShown,
-    isDrawing,
     handleMapElementCreation,
     handleMapElementSelect,
     handleOffCanvasClose,
@@ -56,18 +55,6 @@ export default function YandexMaps() {
       onMenuItemClicked={handleMenuItemClick}
     >
       <YMaps>
-        {isDrawing && (
-          <Container className="p-1">
-            <Row>
-              <Col xs={8} className="d-flex align-items-center">
-                <p>Режим рисования</p>
-              </Col>
-              <Col xs={4}>
-                <Button onClick={handleStopDraw}>Завершить рисование</Button>
-              </Col>
-            </Row>
-          </Container>
-        )}
         <Map
           defaultState={{
             center: MAP_DEFAULT_CENTER,
@@ -118,6 +105,13 @@ export default function YandexMaps() {
                   strokeWidth: POLYLINE_DEFAULT_WIDTH,
                   strokeColor: line.color,
                   editorMaxPoints: Infinity,
+                  editorMenuManager: function () {
+                    const menuItem = {
+                      title: "Завершить редактирование",
+                      onClick: handleStopDraw,
+                    };
+                    return [menuItem];
+                  },
                 }}
                 onClick={(e) =>
                   handleMapElementSelect(e, line.id, MAP_ELEMENT.POLYLINE.VALUE)
@@ -137,6 +131,13 @@ export default function YandexMaps() {
                   strokeWidth: POLYLINE_DEFAULT_WIDTH,
                   strokeColor: polygon.color,
                   editorMaxPoints: Infinity,
+                  editorMenuManager: function () {
+                    const menuItem = {
+                      title: "Завершить редактирование",
+                      onClick: handleStopDraw,
+                    };
+                    return [menuItem];
+                  },
                 }}
                 onClick={(e) =>
                   handleMapElementSelect(
@@ -154,18 +155,19 @@ export default function YandexMaps() {
           <ZoomControl options={{ float: "right" }} />
         </Map>
         <OffCanvas isShown={isOffCanvasShown} onClose={handleOffCanvasClose}>
-          {!!selectedElementValue.elementType && !!selectedElementValue.element && (
-            <ElementForm
-              description={selectedElementValue.element?.description}
-              color={selectedElementValue.element?.color}
-              title={selectedElementValue.element?.title}
-              markerType={selectedElementValue.element?.markerType}
-              onTextFieldChange={handleTextFieldChange}
-              id={selectedElementValue.element?.id}
-              onStartDraw={handleStartDraw}
-              elementType={selectedElementValue.elementType}
-            />
-          )}
+          {!!selectedElementValue.elementType &&
+            !!selectedElementValue.element && (
+              <ElementForm
+                description={selectedElementValue.element?.description}
+                color={selectedElementValue.element?.color}
+                title={selectedElementValue.element?.title}
+                markerType={selectedElementValue.element?.markerType}
+                onTextFieldChange={handleTextFieldChange}
+                id={selectedElementValue.element?.id}
+                onStartDraw={handleStartDraw}
+                elementType={selectedElementValue.elementType}
+              />
+            )}
         </OffCanvas>
       </YMaps>
     </RightContext>

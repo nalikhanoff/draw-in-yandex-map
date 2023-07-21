@@ -162,7 +162,6 @@ export default function useMapHandler() {
     lines,
     placemarks,
     polygons,
-    isDrawing: !!targetEvent,
     isOffCanvasShown,
     selectedElementValue,
     handleMapElementCreation,

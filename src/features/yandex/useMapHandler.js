@@ -4,7 +4,6 @@ import { MARKER_TYPE, LINE_COLOR, MAP_ELEMENT } from "Shared/constants/common";
 
 export default function useMapHandler() {
   const [isOffCanvasShown, setOffCanvasShown] = useState(false);
-  const [offCanvasMode, setOffCanvasMode] = useState(null);
   const [placemarks, setPlacemarks] = useState([]);
   const [lines, setLines] = useState([]);
   const [polygons, setPolygons] = useState([]);
@@ -96,7 +95,6 @@ export default function useMapHandler() {
     if (!targetEvent) return;
 
     setOffCanvasShown(false);
-    setOffCanvasMode(null);
     targetEvent.editor.startEditing();
     targetEvent.editor.events.add(["vertexadd", "vertexdragend"], (ev) => {
       if (selectedElement.elementType === MAP_ELEMENT.POLYLINE.VALUE) {
@@ -117,18 +115,29 @@ export default function useMapHandler() {
     });
   }, [targetEvent, selectedElement]);
 
-  const handleStopDraw = useCallback(() => {
-    if (!targetEvent) return;
-    targetEvent.editor.stopEditing();
+  const { current: handleStopDraw } = useRef(() => {
+    setTargetEvent(prevState => {
+      if (!prevState) return null;
+      prevState.editor.stopEditing();
+      return null;
+    });
+  });
 
-    setTargetEvent(null);
-  }, [targetEvent]);
+  const handleDeleteVertex = useCallback((vertexIdx) => {
+    if (selectedElement.elementType === MAP_ELEMENT.POLYLINE.VALUE) {
+      setLines((prevState) => {
+        const newState = [...prevState];
+        const el = newState.find((line) => line.id === selectedElement.id);
+        el.coords.splice(vertexIdx, 1);
+        return newState;
+      });
+    }
+  }, [selectedElement])
 
-  const handleOffCanvasClose = useCallback(() => {
+  const { current: handleOffCanvasClose } = useRef(() => {
     setOffCanvasShown(false);
-    setOffCanvasMode(null);
     setTargetEvent(null);
-  }, [offCanvasMode]);
+  });
 
   const { current: handleTextFieldChange } = useRef((e) => {
     const { id, name, value } = e.target;
@@ -170,5 +179,6 @@ export default function useMapHandler() {
     handleTextFieldChange,
     handleStartDraw,
     handleStopDraw,
+    handleDeleteVertex,
   };
 }

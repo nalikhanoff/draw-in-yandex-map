@@ -30,10 +30,17 @@ export default function App({ Component, pageProps }) {
               </Nav.Link>
               <Nav.Link
                 as={Link}
-                href="/mapbox"
-                active={currentPath === "/mapbox"}
+                href="/fortunesheet"
+                active={currentPath === "/fortunesheet"}
               >
-                Mapbox карты
+                Fortune sheet
+              </Nav.Link>
+              <Nav.Link
+                as={Link}
+                href="/aggrid"
+                active={currentPath === "/aggrid"}
+              >
+                ag grid
               </Nav.Link>
             </Nav>
           </Navbar.Collapse>

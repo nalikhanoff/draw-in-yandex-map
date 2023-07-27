@@ -8,8 +8,6 @@ import {
   Polygon,
 } from "@pbe/react-yandex-maps";
 
-import { Container, Button, Row, Col } from "react-bootstrap";
-
 import OffCanvas from "Shared/components/OffCanvas";
 import RightContext from "Shared/components/RightContext";
 
@@ -35,6 +33,7 @@ export default function YandexMaps() {
     handleMapElementSelect,
     handleOffCanvasClose,
     handleTextFieldChange,
+    handleDeleteVertex,
     handleStartDraw,
     handleStopDraw,
   } = useMapHandler();
@@ -105,12 +104,25 @@ export default function YandexMaps() {
                   strokeWidth: POLYLINE_DEFAULT_WIDTH,
                   strokeColor: line.color,
                   editorMaxPoints: Infinity,
-                  editorMenuManager: function () {
-                    const menuItem = {
-                      title: "Завершить редактирование",
-                      onClick: handleStopDraw,
-                    };
-                    return [menuItem];
+                  editorMenuManager: function (items, event) {
+                    // console.log(event.geometry.getCoordinates());
+                    const menuItems = [
+                      {
+                        title: "Удалить точку",
+                        onClick: () => {
+                          handleDeleteVertex(event._index);
+                          const deleteVertexHandler = items.find(i => i.id === "removeVertex");
+                          if (deleteVertexHandler) {
+                            deleteVertexHandler.onClick();
+                          }
+                        },
+                      },
+                      {
+                        title: "Завершить редактирование",
+                        onClick: handleStopDraw,
+                      },
+                    ];
+                    return menuItems;
                   },
                 }}
                 onClick={(e) =>

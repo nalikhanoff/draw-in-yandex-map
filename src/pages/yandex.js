@@ -106,23 +106,24 @@ export default function YandexMaps() {
                   editorMaxPoints: Infinity,
                   editorMenuManager: function (items, event) {
                     // console.log(event.geometry.getCoordinates());
-                    const menuItems = [
-                      {
-                        title: "Удалить точку",
-                        onClick: () => {
-                          handleDeleteVertex(event._index);
-                          const deleteVertexHandler = items.find(i => i.id === "removeVertex");
-                          if (deleteVertexHandler) {
-                            deleteVertexHandler.onClick();
-                          }
-                        },
-                      },
+                    const deleteVertexItem = items.find((i) => i.id === "removeVertex");
+                    return [
+                      ...(deleteVertexItem
+                        ? [
+                            {
+                              title: "Удалить точку",
+                              onClick: () => {
+                                handleDeleteVertex(event.getIndex());
+                                deleteVertexItem.onClick(event.getIndex(), 1);
+                              },
+                            },
+                          ]
+                        : []),
                       {
                         title: "Завершить редактирование",
                         onClick: handleStopDraw,
                       },
                     ];
-                    return menuItems;
                   },
                 }}
                 onClick={(e) =>
